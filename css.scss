@@ -1,0 +1,61 @@
+@function create-area($row-a, $row-b, $col-a, $col-b) {
+  @return (row-a: $row-a, row-b: $row-b, col-a: $col-a, col-b: $col-b);
+}
+
+@function create-grid($rows) {
+  $grid: ();
+  $row-index: 1;
+  @each $row in $rows {
+    $col-index: 1;
+    @each $name in $row {
+      @if map-get($grid, $name) {
+        $area: map-get($grid, $name);
+        $area: map-merge($area, (col-b: $col-index, row-b: $row-index));
+        $grid: map-merge($grid, ($name: $area));
+      } @else {
+        $area: create-area($row-index, $row-index, $col-index, $col-index);
+        $grid: map-merge($grid, ($name: $area))
+      }
+      $col-index: $col-index + 1;
+    }
+    $row-index: $row-index + 1;
+  }
+  @return $grid;
+}
+
+@mixin grid-area($grid, $name) {
+  $area: map-get($grid, $name);
+  $r-span: map-get($area, row-b) - map-get($area, row-a) + 1;
+  $c-span: map-get($area, col-b) - map-get($area, col-a) + 1;
+  grid-row: #{map-get($area, row-a)} / span #{$r-span};
+  grid-column: #{map-get($area, col-a)} / span #{$c-span};
+}
+
+
+// Example:
+
+$grid: create-grid(((one two) (one three)));
+
+.parent {
+  width: 300px;
+  height: 300px;
+  background: lightgrey;
+  display: grid;
+  grid-template-rows: auto auto;
+  grid-template-columns: auto auto;
+}
+
+.child1 {
+  background: lightgreen;
+  @include grid-area($grid, one);
+}
+
+.child2 {
+  background: turquoise;
+  @include grid-area($grid, two);
+}
+
+.child3 {
+  background: pink;
+  @include grid-area($grid, three);
+}
